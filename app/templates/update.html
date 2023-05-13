@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-3">
+            <h5>Create New Product</h5>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+
+        <form method="POST" class='col-6'>
+            {{ form.hidden_tag() }}
+
+
+            {{ form.details1(class='form-control', placeholder='Description', value=serv.details1) }}
+            {{ form.details2(class='form-control', placeholder='Description', value=serv.details2)  }}
+            {{ form.details3(class='form-control', placeholder='Description', value=serv.details3)  }}
+            {{ form.details4(class='form-control', placeholder='Description', value=serv.details4)  }}
+            {{ form.details5(class='form-control', placeholder='Description', value=serv.details5)  }}
+            {{ form.details6(class='form-control', placeholder='Description', value=serv.details6)  }}
+            {{ form.details7(class='form-control', placeholder='Description', value=serv.details7)  }}
+            {{ form.details8(class='form-control', placeholder='Description', value=serv.details8)  }}
+            {{ form.img_url(class='form-control', placeholder='img', value=serv.img_url)  }}
+
+            {{ form.name(class='form-control', placeholder='Name', value=serv.name) }}
+            {{ form.price(class='form-control', placeholder='price', value=serv.price) }}
+            {{ form.submit(class='btn btn-primary', placeholder='Update Product!') }}
+        </form>
+        
+    </div>
+
+    {% endblock %}
