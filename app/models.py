@@ -48,7 +48,7 @@ class Service(db.Model):
     price = db.Column(db.Integer)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
 
-    def __init__(self, details1, details2, details3, details4, details5, details6, details7, details8, name, price=0):
+    def __init__(self, details1, details2, details3, details4, details5, details6, details7, details8, img_url,name, price=0):
         self.details1 = details1
         self.details2 = details2
         self.details3 = details3
@@ -109,6 +109,9 @@ class Contact(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def deletecontact(self):
+        db.session.delete(self)
+        db.session.commit()
 
 
 class Addons(db.Model):
@@ -140,6 +143,6 @@ class Addons(db.Model):
     def saveadd(self):
         db.session.commit()
 
-    def deletedet(self):
+    def delete(self):
         db.session.delete(self)
         db.session.commit()

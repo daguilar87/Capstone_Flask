@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h3>Addons</h3>
+  <div class="container">
+    <div class="row justify-content-end mb-3">
+      <div class="col-auto">
+        <a href="{{ url_for('createAdd') }}" class="btn btn-primary">Create Addon</a>
+      </div>
+    </div>
+    {% for addon in addons %}
+      <div class="row justify-content-center">
+        <div class="col-6">
+          <div class="card-body">
+            <h4>{{ addon.name }}</h4>
+            <p>{{ addon.det1 }}</p>
+            <p>{{ addon.det2 }}</p>
+            <p>{{ addon.det3 }}</p>
+            <p>{{ addon.det4 }}</p>
+            <a href="{{ url_for('update_addon', addon_id=addon.id) }}" class="btn btn-primary">Update</a>             
+            <form action="{{ url_for('delete_addon', addon_id=addon.id) }}" method="POST">
+              <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}
+

@@ -1,33 +1,39 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h3> Services</h3>
+<h3>Services</h3>
 <div class="container">
   <div class="row justify-content-center mt-3 mb-3">
     <div class="col-3 p-3">
       <a href="{{ url_for('createProd') }}" class="btn btn-outline-dark">Create New Service</a>
-      
     </div>
   </div>
 
-
-
-    {% for p in servs %}
-
+  {% for p in servs %}
   <div class="row justify-content-center">
     <div class="col-6">
-        <div class="card-body">
-          <h4>Price: ${{ p.price }}</h4>
-          <h6 class="card-subtitle mb-2 text-muted">{{ p.name }}</h6>
-          <p class="card-text">{{p.details}}</p>
-          <p><small>Posted: {{ p.date_created }}</small></p>
-          
+      <div class="card-body">
+        <h4>Price: ${{ p.price }}</h4>
+        <h6 class="card-subtitle mb-2 text-muted">{{ p.name }}</h6>
+        <p class="card-text">{{ p.details1 }}</p>
+        <p class="card-text">{{ p.details2 }}</p>
+        <p class="card-text">{{ p.details3 }}</p>
+        <p class="card-text">{{ p.details4 }}</p>
+        <p class="card-text">{{ p.details5 }}</p>
+        <p class="card-text">{{ p.details6 }}</p>
+        <p class="card-text">{{ p.details7 }}</p>
+        <p class="card-text">{{ p.details8 }}</p>
+        <img src="{{ p.img_url }}" alt="Service Image" width="200" height="150">
+        <p><small>Posted: {{ p.date_created }}</small></p>
+        <div>
+          <a href="{{ url_for('updateProd', serv_id=p.id) }}" class="btn btn-primary">Update</a>
+          <form action="{{ url_for('delProd', serv_id=p.id) }}" method="POST" style="display: inline;">
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>          
         </div>
       </div>
     </div>
   </div>
-    {% endfor %}
-
-
+  {% endfor %}
 </div>
 {% endblock %}

@@ -4,16 +4,16 @@ from .models import Service, User,Addons, Contact
 from app import app
 from werkzeug.security import check_password_hash
 from flask_login import logout_user, login_user, current_user
-import os
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+
+# from sendgrid import SendGridAPIClient
+# from sendgrid.helpers.mail import Mail
 
 
 
 
 @app.route('/serv', methods=['GET'])
 def shop_home():
-    servs = Service.query.filter_by(id=1).all()
+    servs = Service.query.all()
     return render_template('serv.html', servs = servs)
 
 @app.route('/serv/create', methods=['GET', 'POST'])
@@ -53,10 +53,14 @@ def createAdd():
             return redirect(url_for('shop_home'))
     return render_template('createa.html', form=form)
 
-# @app.route('/serv/service/<int:serv_id>')
-# def indProd(serv_id):
-#     serv = Service.query.get(serv_id)
-#     return render_template('service.html', serv=serv)
+@app.route('/addons/delete/<int:addon_id>', methods=['POST'])
+def delete_addon(addon_id):
+    addon = Addons.query.get_or_404(addon_id)
+    addon.delete()  # Call the delete() method from the Addons model
+    flash('Addon deleted!', category='success')
+    return redirect(url_for('view_addons'))
+
+
 
 @app.route('/serv/update/<int:serv_id>', methods=['GET', 'POST'])
 def updateProd(serv_id):
@@ -91,12 +95,13 @@ def updateProd(serv_id):
         return redirect(url_for('createAdd', serv_id=serv_id))
     return render_template('update.html', serv=serv, form=form, serv_id=serv_id)
 
-@app.get('/serv/delete/<int:serv_id>')
-def delProd(prod_id):
-    prod = Service.query.get(prod_id)
-    prod.deleteService()
-    flash('Product has been deleted- Byebye!', category='danger')
-    return redirect(url_for('serv.shop_home', prod=prod))
+@app.route('/serv/delete/<int:serv_id>', methods=['GET', 'POST'])
+def delProd(serv_id):
+    service = Service.query.get_or_404(serv_id)
+    service.deleteService()
+    flash('Service has been deleted. Goodbye!', category='danger')
+    return redirect(url_for('shop_home'))
+
 
 @app.route('/login', methods=['GET', 'POST'])    
 def loginPage():
@@ -209,3 +214,33 @@ def create_contact():
     
     return jsonify({'message': 'Contact created successfully.'})
 
+@app.route('/addons', methods=['GET'])
+def view_addons():
+    addons = Addons.query.all()  # Retrieve all addons from the database
+    return render_template('addons.html', addons=addons)
+
+@app.route('/customers')
+def customers():
+    contacts = Contact.query.all()
+    return render_template('customers.html', contacts=contacts)
+
+@app.route('/customers/delete/<int:contact_id>', methods=['POST'])
+def delete_contact(contact_id):
+    contact = Contact.query.get_or_404(contact_id)
+    contact.deletecontact()
+    flash('Contact deleted!', category='success')
+    return redirect(url_for('customers'))
+
+@app.route('/addons/update/<int:addon_id>', methods=['GET', 'POST'])
+def update_addon(addon_id):
+    form = Updateaddon()
+    addon = Addons.query.get(addon_id)
+    if request.method == 'POST':
+        addon.det1 = form.det1.data
+        addon.det2 = form.det2.data
+        addon.det3 = form.det3.data
+        addon.det4 = form.det4.data
+        addon.saveadd()
+        flash('Addon updated!', category='success')
+        return redirect(url_for('view_addons'))
+    return render_template('update_addon.html', addon=addon, form=form, addon_id=addon_id)
