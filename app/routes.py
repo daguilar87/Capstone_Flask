@@ -8,8 +8,66 @@ from flask_login import logout_user, login_user, current_user
 # from sendgrid import SendGridAPIClient
 # from sendgrid.helpers.mail import Mail
 
+# Home/Login/Register/Logout/
 
+@app.route('/')
+def homePage():
 
+    return render_template('index.html')
+
+@app.route('/login', methods=['GET', 'POST'])    
+def loginPage():
+    form = LoginForm()
+    if request.method == 'POST':
+        if form.validate():
+            username = form.username.data
+            password = form.password.data
+
+            user = User.query.filter_by(username=username).first()
+        # SELECT * FROM user WHERE username = <username variable>
+            if user:
+                if check_password_hash(user.password, password):  # <--NEW
+                #user.password == password:  --OLD way
+                    flash('YAY, you\'re logged in!', 'success')
+                    login_user(user)
+                    
+                    return redirect(url_for('homePage'))
+                    
+                else:
+                    flash('WRONG password. . .', 'warning')
+            else:
+                flash('This isn\'t a user!', 'danger')
+            return redirect(url_for('loginPage'))
+    return render_template('login.html', form=form)
+
+@app.route('/register', methods=['GET', 'POST'])
+def registerPage():
+    form = SignUpForm()
+    if request.method == 'POST':
+        if form.validate():
+            username = form.username.data
+            email = form.email.data
+            password = form.password.data
+            if User.query.filter_by(username=username).first():
+                flash('That username already exists, please try another!', 'warning')
+                return redirect(url_for('registerPage'))
+            if User.query.filter_by(email=email).first():
+                flash('that email has been used previously, try again', 'warning')
+                return redirect(url_for('registerPage'))
+
+            user = User(username, email, password)            
+            user.saveUser()
+
+            flash(f'Welcome to INSTURBlog {user.username}', 'success')
+            return redirect(url_for('loginPage'))
+    return render_template('register.html', form=form)
+
+@app.route('/logout')
+def logOut():
+    logout_user()
+    return redirect(url_for('homePage'))
+
+#Services
 
 @app.route('/serv', methods=['GET'])
 def shop_home():
@@ -37,30 +95,6 @@ def createProd():
             flash('Service created!', category='success')
             return redirect(url_for('shop_home'))
     return render_template('create.html', form=form)
-
-@app.route('/serv/createa', methods=['GET', 'POST'])
-def createAdd():
-    form = Createaddon()
-    if request.method == 'POST':
-        if form.validate():
-            det1 = form.det1.data
-            det2 = form.det2.data
-            det3= form.det3.data
-            det4 = form.det4.data
-            new = Addons( det1, det2,det3,det4)
-            new.savedet()
-            flash('Addon created!', category='success')
-            return redirect(url_for('shop_home'))
-    return render_template('createa.html', form=form)
-
-@app.route('/addons/delete/<int:addon_id>', methods=['POST'])
-def delete_addon(addon_id):
-    addon = Addons.query.get_or_404(addon_id)
-    addon.delete()  # Call the delete() method from the Addons model
-    flash('Addon deleted!', category='success')
-    return redirect(url_for('view_addons'))
-
-
 
 @app.route('/serv/update/<int:serv_id>', methods=['GET', 'POST'])
 def updateProd(serv_id):
@@ -102,66 +136,77 @@ def delProd(serv_id):
     flash('Service has been deleted. Goodbye!', category='danger')
     return redirect(url_for('shop_home'))
 
+# Addons
 
-@app.route('/login', methods=['GET', 'POST'])    
-def loginPage():
-    form = LoginForm()
+@app.route('/serv/createa', methods=['GET', 'POST'])
+def createAdd():
+    form = Createaddon()
     if request.method == 'POST':
         if form.validate():
-            username = form.username.data
-            password = form.password.data
+            det1 = form.det1.data
+            det2 = form.det2.data
+            det3= form.det3.data
+            det4 = form.det4.data
+            new = Addons( det1, det2,det3,det4)
+            new.savedet()
+            flash('Addon created!', category='success')
+            return redirect(url_for('shop_home'))
+    return render_template('createa.html', form=form)
 
-            user = User.query.filter_by(username=username).first()
-        # SELECT * FROM user WHERE username = <username variable>
-            if user:
-                if check_password_hash(user.password, password):  # <--NEW
-                #user.password == password:  --OLD way
-                    flash('YAY, you\'re logged in!', 'success')
-                    login_user(user)
-                    
-                    return redirect(url_for('homePage'))
-                    
-                else:
-                    flash('WRONG password. . .', 'warning')
-            else:
-                flash('This isn\'t a user!', 'danger')
-            return redirect(url_for('loginPage'))
-    return render_template('login.html', form=form)
+@app.route('/addons/delete/<int:addon_id>', methods=['POST'])
+def delete_addon(addon_id):
+    addon = Addons.query.get_or_404(addon_id)
+    addon.delete()  # Call the delete() method from the Addons model
+    flash('Addon deleted!', category='success')
+    return redirect(url_for('view_addons'))
 
-@app.route('/')
-def homePage():
+@app.route('/addons', methods=['GET'])
+def view_addons():
+    addons = Addons.query.all()  # Retrieve all addons from the database
+    return render_template('addons.html', addons=addons)
 
+@app.route('/addons/update/<int:addon_id>', methods=['GET', 'POST'])
+def update_addon(addon_id):
+    form = Updateaddon()
+    addon = Addons.query.get(addon_id)
+    if request.method == 'POST':
+        addon.det1 = form.det1.data
+        addon.det2 = form.det2.data
+        addon.det3 = form.det3.data
+        addon.det4 = form.det4.data
+        addon.saveadd()
+        flash('Addon updated!', category='success')
+        return redirect(url_for('view_addons'))
+    return render_template('update_addon.html', addon=addon, form=form, addon_id=addon_id)
+
+#Customer
+
+@app.route('/customers')
+def customers():
+    contacts = Contact.query.all()
+    return render_template('customers.html', contacts=contacts)
+
+@app.route('/customers/delete/<int:contact_id>', methods=['POST'])
+def delete_contact(contact_id):
+    contact = Contact.query.get_or_404(contact_id)
+    contact.deletecontact()
+    flash('Contact deleted!', category='success')
+    return redirect(url_for('customers'))
+
+@app.route('/api/contact', methods=['POST'])
+def create_contact():
+    name = request.form['name']
+    phone = request.form['phone']
+    email = request.form['email']
+    services = request.form['services']
+    message = request.form['message']
+
+    contact = Contact(name=name, phone=phone, email=email, services=services, message=message)
+    contact.saveCon()
     
+    return jsonify({'message': 'Contact created successfully.'})
 
-    return render_template('index.html')
-
-@app.route('/register', methods=['GET', 'POST'])
-def registerPage():
-    form = SignUpForm()
-    if request.method == 'POST':
-        if form.validate():
-            username = form.username.data
-            email = form.email.data
-            password = form.password.data
-            if User.query.filter_by(username=username).first():
-                flash('That username already exists, please try another!', 'warning')
-                return redirect(url_for('registerPage'))
-            if User.query.filter_by(email=email).first():
-                flash('that email has been used previously, try again', 'warning')
-                return redirect(url_for('registerPage'))
-
-            user = User(username, email, password)            
-            user.saveUser()
-
-            flash(f'Welcome to INSTURBlog {user.username}', 'success')
-            return redirect(url_for('loginPage'))
-    return render_template('register.html', form=form)
-
-@app.route('/logout')
-def logOut():
-    logout_user()
-    return redirect(url_for('homePage'))
-
+# Api
 
 @app.route('/shop')
 def productDB():
@@ -198,49 +243,3 @@ def addonDB():
         'data' : prodlist,
         'item_count' : len(prodlist)
     }
-
-
-
-@app.route('/api/contact', methods=['POST'])
-def create_contact():
-    name = request.form['name']
-    phone = request.form['phone']
-    email = request.form['email']
-    services = request.form['services']
-    message = request.form['message']
-
-    contact = Contact(name=name, phone=phone, email=email, services=services, message=message)
-    contact.saveCon()
-    
-    return jsonify({'message': 'Contact created successfully.'})
-
-@app.route('/addons', methods=['GET'])
-def view_addons():
-    addons = Addons.query.all()  # Retrieve all addons from the database
-    return render_template('addons.html', addons=addons)
-
-@app.route('/customers')
-def customers():
-    contacts = Contact.query.all()
-    return render_template('customers.html', contacts=contacts)
-
-@app.route('/customers/delete/<int:contact_id>', methods=['POST'])
-def delete_contact(contact_id):
-    contact = Contact.query.get_or_404(contact_id)
-    contact.deletecontact()
-    flash('Contact deleted!', category='success')
-    return redirect(url_for('customers'))
-
-@app.route('/addons/update/<int:addon_id>', methods=['GET', 'POST'])
-def update_addon(addon_id):
-    form = Updateaddon()
-    addon = Addons.query.get(addon_id)
-    if request.method == 'POST':
-        addon.det1 = form.det1.data
-        addon.det2 = form.det2.data
-        addon.det3 = form.det3.data
-        addon.det4 = form.det4.data
-        addon.saveadd()
-        flash('Addon updated!', category='success')
-        return redirect(url_for('view_addons'))
-    return render_template('update_addon.html', addon=addon, form=form, addon_id=addon_id)
