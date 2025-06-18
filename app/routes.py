@@ -3,10 +3,26 @@ from .forms import CreateService, UpdateService, SignUpForm, LoginForm, Createad
 from .models import Service, User,Addons, Contact
 from app import app
 from werkzeug.security import check_password_hash
-from flask_login import logout_user, login_user, current_user
+from flask_login import logout_user, login_user, current_user, login_required, LoginManager
+from app.models import User
+REGISTRATION_ENABLED = False
+
 
 # from sendgrid import SendGridAPIClient
 # from sendgrid.helpers.mail import Mail
+
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+@login_manager.unauthorized_handler
+def unauthorized_callback():
+    flash("You need to login to access that page.", "warning")
+    return redirect(url_for('homePage'))
 
 # Home/Login/Register/Logout/
 
@@ -42,6 +58,10 @@ def loginPage():
 
 @app.route('/register', methods=['GET', 'POST'])
 def registerPage():
+    if not REGISTRATION_ENABLED:
+        flash('Registration is currently disabled.', 'warning')
+        return redirect(url_for('loginPage'))  # or homePage
+
     form = SignUpForm()
     if request.method == 'POST':
         if form.validate():
@@ -52,7 +72,7 @@ def registerPage():
                 flash('That username already exists, please try another!', 'warning')
                 return redirect(url_for('registerPage'))
             if User.query.filter_by(email=email).first():
-                flash('that email has been used previously, try again', 'warning')
+                flash('That email has been used previously, try again.', 'warning')
                 return redirect(url_for('registerPage'))
 
             user = User(username, email, password)            
@@ -62,6 +82,7 @@ def registerPage():
             return redirect(url_for('loginPage'))
     return render_template('register.html', form=form)
 
+
 @app.route('/logout')
 def logOut():
     logout_user()
@@ -70,11 +91,13 @@ def logOut():
 #Services
 
 @app.route('/serv', methods=['GET'])
+@login_required
 def shop_home():
     servs = Service.query.all()
     return render_template('serv.html', servs = servs)
 
 @app.route('/serv/create', methods=['GET', 'POST'])
+@login_required
 def createProd():
     form = CreateService()
     if request.method == 'POST':
@@ -139,6 +162,7 @@ def delProd(serv_id):
 # Addons
 
 @app.route('/serv/createa', methods=['GET', 'POST'])
+@login_required
 def createAdd():
     form = Createaddon()
     if request.method == 'POST':
@@ -161,6 +185,7 @@ def delete_addon(addon_id):
     return redirect(url_for('view_addons'))
 
 @app.route('/addons', methods=['GET'])
+@login_required
 def view_addons():
     addons = Addons.query.all()  # Retrieve all addons from the database
     return render_template('addons.html', addons=addons)
@@ -182,6 +207,7 @@ def update_addon(addon_id):
 #Customer
 
 @app.route('/customers')
+@login_required
 def customers():
     contacts = Contact.query.all()
     return render_template('customers.html', contacts=contacts)
